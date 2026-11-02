@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#39251b">
+  <title>Không Gian Tâm Hương</title>
+  <style>
+    :root { --gold:#f8d98b; --brown:#65351f; --deep:#241810; }
+    * { box-sizing:border-box }
+    html,body { margin:0; min-height:100%; font-family:Georgia,"Times New Roman",serif; }
+    body {
+      min-height:100vh; min-height:100svh; overflow:hidden; color:#fff5dc;
+      background:#39251b url("assets/chua-background.png") center center/cover no-repeat fixed;
+    }
+    body::before {
+      content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background:linear-gradient(180deg,rgba(25,16,10,.12),rgba(25,12,7,.18) 48%,rgba(25,12,7,.48));
+    }
+    .sound-toggle {
+      position:fixed; z-index:5; top:14px; left:14px; border:1px solid #f6d99b88;
+      border-radius:30px; padding:10px 14px; color:#fff4d7; background:#30251dcc;
+      font:600 14px system-ui; cursor:pointer; backdrop-filter:blur(6px);
+    }
+    .content { position:relative; z-index:3; min-height:100svh; display:flex; flex-direction:column;
+      align-items:center; justify-content:flex-end; padding:20px 16px max(26px,env(safe-area-inset-bottom)); }
+    .intro { display:none; }
+    .intro h1 { margin:0 0 9px; color:#ffe5a5; font-size:clamp(25px,5vw,44px); font-weight:500; letter-spacing:.04em; }
+    .intro p { margin:0; font-size:clamp(14px,2.5vw,19px); color:#fff1d1; }
+
+    .incense-status { min-height:28px; margin-bottom:12px; color:#fff2ce; font-size:15px; text-shadow:0 2px 7px #32190e; }
+    .incense-visual { position:fixed; inset:0; z-index:2; pointer-events:none; overflow:hidden; }
+    .incense-stick { position:absolute; width:5px; border-radius:3px 3px 1px 1px;
+      opacity:0; background:linear-gradient(90deg,#6b3218,#e3a34b 45%,#7a3919);
+      box-shadow:0 0 5px #ffbd5b99; transform:translate(-50%,var(--rise-from)); }
+    .incense-stick::before { content:""; position:absolute; left:50%; top:-1.3em;
+      width:.8em; height:1.35em; border-radius:50% 50% 50% 0;
+      background:radial-gradient(ellipse at 60% 70%,#fff8c4 0 18%,#ffc35c 40%,#ff6b22 70%,transparent 75%);
+      filter:drop-shadow(0 0 5px #ff9a32); transform:translateX(-50%) rotate(-45deg) scale(var(--stick-scale));
+      transform-origin:50% 90%; }
+    .incense-visual.rising .incense-stick { animation:incense-rise 1.25s cubic-bezier(.2,.72,.28,1) forwards; }
+    .incense-visual.rising .incense-stick:nth-child(2) { animation-delay:.16s; }
+    .incense-visual.rising .incense-stick:nth-child(3) { animation-delay:.32s; }
+    .incense-visual.rising .incense-stick::before { animation:flame-flicker .7s ease-in-out infinite alternate; }
+    @keyframes incense-rise {
+      0% { opacity:0; transform:translate(-50%,var(--rise-from)) rotate(-5deg); }
+      12% { opacity:1; }
+      82% { transform:translate(-50%,-4px) rotate(2deg); }
+      100% { opacity:1; transform:translate(-50%,0) rotate(0); }
+    }
+    @keyframes flame-flicker {
+      from { filter:drop-shadow(0 0 3px #ff9a32); }
+      to { filter:drop-shadow(0 0 8px #ffd36a); }
+    }
+    .offer {
+      width:100%; border:1px solid #ffe3a0; border-radius:18px; padding:17px 20px;
+      color:#fff2ce; background:linear-gradient(135deg,#8c4b27,#512616 65%,#8b4b26);
+      box-shadow:0 7px 24px #1c0e0aaa,inset 0 1px 0 #fff8d777;
+      font:700 19px Georgia,serif; letter-spacing:.08em; cursor:pointer;
+      transition:transform .2s,filter .2s;
+    }
+    .offer:active { transform:scale(.98); filter:brightness(1.15); }
+    .offer:disabled { opacity:.78; cursor:default; }
+    .mantra { opacity:0; transform:translateY(8px); transition:opacity 1s,transform 1s;
+      margin:16px auto 0; color:#ffe7a8; font-size:clamp(20px,4vw,30px);
+      text-shadow:0 2px 12px #2b1308; }
+    .mantra.show { opacity:1; transform:translateY(0); }
+    .blessing { margin-top:7px; font-size:14px; color:#fff0d0; text-shadow:0 2px 8px #32190e; }
+    .petal { position:fixed; z-index:1; top:-10vh; pointer-events:none; color:#ffd1dc;
+      text-shadow:0 1px 5px #8c4c5a88; animation:fall linear forwards; }
+    @keyframes fall { to { transform:translate3d(var(--drift),110vh,0) rotate(620deg); opacity:.15; } }
+    .smoke { position:fixed; z-index:1; left:50%; bottom:23%; width:12px; height:55px;
+      pointer-events:none; border-radius:50%; background:radial-gradient(ellipse,#fff9e8aa 0%,#fff9e844 35%,transparent 72%);
+      filter:blur(5px); opacity:0; animation:smokeRise 4s ease-out forwards; }
+    @keyframes smokeRise { 0%{opacity:0;transform:translate(-50%,15px) scale(.5)} 20%{opacity:.5}
+      100%{opacity:0;transform:translate(calc(-50% + var(--sway)), -150px) scale(3)} }
+    .note { margin-top:12px; font:12px/1.5 system-ui,sans-serif; color:#fff0d0cc; }
+    @media(max-width:600px) {
+      body { background-position:center center; background-attachment:scroll; }
+      .content { padding-bottom:max(22px,env(safe-area-inset-bottom)); }
+      .intro { padding-top:78px; margin-bottom:12px; }
+      .action-area { width:min(390px,76vw); }
+      .offer { height:64px; }
+      .smoke { bottom:29%; }
+    }
+    @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+  </style>
+</head>
+<body>
+  <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true">🔔 Âm thanh: bật</button>
+  <main class="content">
+    <section class="action-area" aria-live="polite">
+      <div class="incense-status" id="status">Ba nén tâm hương, gửi theo lòng thành.</div>
+      <button class="offer" id="offerButton" type="button">THẮP HƯƠNG</button>
+      <div class="mantra" id="mantra">Nam Mô A Di Đà Phật</div>
+      <div class="blessing" id="blessing">Nguyện cho thân tâm an yên </div>
+      
+      <div class="note">Chạm vào lư hương để dâng hương.</div>
+    </section>
+  </main>
+  <div class="incense-visual" id="incenseVisual" aria-hidden="true">
+    <span class="incense-stick"></span>
+    <span class="incense-stick"></span>
+    <span class="incense-stick"></span>
+  </div>
+  <script>
+    const button = document.getElementById('offerButton');
+    const statusText = document.getElementById('status');
+    const mantra = document.getElementById('mantra');
+    const soundToggle = document.getElementById('soundToggle');
+    const incenseVisual = document.getElementById('incenseVisual');
+    const backgroundWidth = 1213;
+    const backgroundHeight = 1297;
+    const incensePositions = [570, 606, 642];
+    let audioContext = null;
+    let soundEnabled = true;
+    let busy = false;
+
+    function positionIncense() {
+      const scale = Math.max(window.innerWidth / backgroundWidth, window.innerHeight / backgroundHeight);
+      const offsetX = (window.innerWidth - backgroundWidth * scale) / 2;
+      const offsetY = (window.innerHeight - backgroundHeight * scale) / 2;
+      const stickHeight = 240 * scale;
+      const stickBottom = 840 * scale + offsetY;
+
+      incenseVisual.querySelectorAll('.incense-stick').forEach((stick, index) => {
+        const top = stickBottom - stickHeight;
+        stick.style.left = `${offsetX + incensePositions[index] * scale}px`;
+        stick.style.top = `${top}px`;
+        stick.style.height = `${stickHeight}px`;
+        stick.style.width = `${5 * scale}px`;
+        stick.style.fontSize = `${8 * scale}px`;
+        stick.style.setProperty('--stick-scale', String(scale));
+        stick.style.setProperty('--rise-from', `${Math.max(0, window.innerHeight - top + 24)}px`);
+      });
+    }
+
+    positionIncense();
+    window.addEventListener('resize', positionIncense);
+
+    function getAudioContext() {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      if (!audioContext) audioContext = new Ctx();
+      return audioContext;
+    }
+
+    async function resumeAudioContext() {
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === 'suspended') await ctx.resume();
+      return ctx;
+    }
+
+    // Chuông tổng hợp bằng Web Audio, không cần tải file âm thanh bên ngoài.
+    function ringBell(startAt) {
+      const ctx = getAudioContext();
+      if (!ctx || !soundEnabled) return;
+      const partials = [1, 2.01, 2.73, 3.91];
+      partials.forEach((ratio, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440 * ratio, startAt);
+        gain.gain.setValueAtTime(0.0001, startAt);
+        gain.gain.exponentialRampToValueAtTime(i === 0 ? 0.19 : 0.055, startAt + 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 2.25 - i * 0.18);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(startAt); osc.stop(startAt + 2.3);
+      });
+    }
+
+    function sayMantra() {
+      if (!soundEnabled || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance('Nam mô A Di Đà Phật');
+      utterance.lang = 'vi-VN';
+      utterance.rate = 0.72;
+      utterance.pitch = 0.78;
+      utterance.volume = 1;
+      const voices = window.speechSynthesis.getVoices();
+      const vietnamese = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('vi'));
+      if (vietnamese) utterance.voice = vietnamese;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function petals(count = 34) {
+      const symbols = ['🌸','🌺','✿','❀'];
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('span');
+        el.className = 'petal';
+        el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        el.style.left = Math.random() * 100 + 'vw';
+        el.style.fontSize = (12 + Math.random() * 17) + 'px';
+        el.style.animationDuration = (5 + Math.random() * 6) + 's';
+        el.style.animationDelay = (Math.random() * 2) + 's';
+        el.style.setProperty('--drift', (Math.random() * 180 - 90) + 'px');
+        document.body.appendChild(el);
+        el.addEventListener('animationend', () => el.remove(), { once:true });
+      }
+    }
+
+    function incenseSmoke() {
+      for (let i = 0; i < 8; i++) {
+        const el = document.createElement('span');
+        el.className = 'smoke';
+        el.style.marginLeft = (Math.random() * 50 - 25) + 'px';
+        el.style.animationDelay = (i * 0.32) + 's';
+        el.style.setProperty('--sway', (Math.random() * 70 - 35) + 'px');
+        document.body.appendChild(el);
+        el.addEventListener('animationend', () => el.remove(), { once:true });
+      }
+    }
+
+    soundToggle.addEventListener('click', async () => {
+      soundEnabled = !soundEnabled;
+      soundToggle.textContent = soundEnabled ? '🔔 Âm thanh: bật' : '🔇 Âm thanh: tắt';
+      soundToggle.setAttribute('aria-pressed', String(soundEnabled));
+      if (soundEnabled) {
+        try {
+          await resumeAudioContext();
+        } catch (error) {
+          console.error('Không thể bật âm thanh:', error);
+          statusText.textContent = 'Không thể bật âm thanh. Vui lòng kiểm tra cài đặt trình duyệt.';
+        }
+      }
+      else if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    });
+
+    button.addEventListener('click', async () => {
+      if (busy) return;
+      busy = true;
+      button.disabled = true;
+      statusText.textContent = 'Ba nén nhang đang được dâng lên…';
+      mantra.classList.remove('show');
+      incenseVisual.classList.remove('rising');
+      void incenseVisual.offsetWidth;
+      incenseVisual.classList.add('rising');
+      petals();
+      incenseSmoke();
+
+      let bellSequenceStarted = false;
+      if (soundEnabled) {
+        try {
+          const ctx = await resumeAudioContext();
+          if (ctx && ctx.state === 'running') {
+            const now = ctx.currentTime + 0.12;
+            ringBell(now);
+            ringBell(now + 2.65);
+            ringBell(now + 5.2);
+            bellSequenceStarted = true;
+          }
+        } catch (error) {
+          console.error('Không thể phát âm thanh:', error);
+          statusText.textContent = 'Trình duyệt đang chặn âm thanh. Hãy thử bật lại bằng nút âm thanh.';
+        }
+      }
+
+      // Ba tiếng chuông cách nhau, sau đó mới niệm Phật.
+      window.setTimeout(() => {
+        mantra.classList.add('show');
+        statusText.textContent = 'Ba nén nhang đã an vị. Nguyện cho hàng con vô đúng hạn, Nguyện cho con đòi được công nợ';
+        sayMantra();
+        button.disabled = false;
+        busy = false;
+      }, bellSequenceStarted ? 7600 : 900);
+    });
+  </script>
+</body>
+</html>
